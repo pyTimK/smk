@@ -1,6 +1,6 @@
 {
-  "name": "Aquakit",
-  "short_name": "Aquakit",
+  "name": "Smart Medical Kiosk",
+  "short_name": "SMK",
   "icons": [
     {
       "src": "/images/icons/maskable_icon_x48.png",
@@ -41,8 +41,8 @@
   ],
   "scope": "/",
   "start_url": "/",
-  "description": "Welcome to Aquakit! Explore the ultimate web interface for your Arduino-powered aquarium. Monitor and control temperature, pH levels, auto-feed your aquatic friends, and enjoy auto water refill and drain features. With real-time stats showcased in our user-friendly app, dive into the seamless experience of managing your aquarium with ease and precision. Create an aquatic haven with Aquakit today!",
+  "description": "Empowering users to access and manage their health data seamlessly. View vital metrics including weight, height, blood pressure, heart rate, SpO2, temperature, and blood pressure. Experience cutting-edge health insights through our Raspberry Pi 4B powered kiosk.",
   "display": "standalone",
-  "theme_color": "#324A5E",
-  "background_color": "#324A5E"
+  "theme_color": "#716EF9",
+  "background_color": "#716EF9"
 }
