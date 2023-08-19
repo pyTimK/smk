@@ -20,6 +20,7 @@ module.exports = {
         dark_blue: "#70BDF2",
         darker_primary: "#716EF9",
         darkest_primary: "#0C137A",
+        darker_secondary: "#018767",
         link: "#15233D",
         red: '#f70000',
         semi_transparent: "#00000022",

@@ -1,17 +1,13 @@
 import { UserData, constructEmptyUserData } from "@/classes/UserData";
 import AvatarCard from "@/components/AvatarCard";
-import AvatarCardWrapper from "@/components/svg/AvatarCardWrapper";
-import MenuBar from "@/components/svg/MenuBar";
 import useFirestoreData, { FirestoreDataType } from "@/hooks/useFirestoreData";
-import { User, signOut } from "firebase/auth";
+import { User } from "firebase/auth";
 import { doc } from "firebase/firestore";
-import { createContext, useState } from "react";
-import { auth, db } from "../firebase";
+import { createContext, useContext, useState } from "react";
+import { db } from "../firebase";
 import RegisterPage from "../register";
 import SizedBox from "@/components/SizedBox";
-import Popup from "reactjs-popup";
-import "reactjs-popup/dist/index.css";
-import MyButton from "@/components/MyButton";
+import MenuBar from "@/components/MenuBar";
 
 export const MainPageContext = createContext({
   user: {} as User,
@@ -48,34 +44,70 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
       <MainPageContext.Provider
         value={{ user, userData, setIsEditingUserData }}
       >
-        <Popup
-          trigger={
-            <button>
-              {" "}
-              <MenuBar />
-            </button>
-          }
-          offsetY={10}
-          position="bottom left"
-        >
-          <div className="w-full flex justify-center py-2 px-1">
-            <MyButton
-              label="Sign Out"
-              color="bg-white"
-              borderColor="border border-red"
-              textColor="text-red"
-              pX={2}
-              pY={0.5}
-              onClick={() => {
-                signOut(auth);
-              }}
-            />
-          </div>
-        </Popup>
-
+        <MenuBar />
         <SizedBox height={10} />
         <AvatarCard />
+        <HealthGrid />
       </MainPageContext.Provider>
+    </div>
+  );
+};
+
+interface HealthGridProps {}
+
+const HealthGrid: React.FC<HealthGridProps> = () => {
+  const { userData } = useContext(MainPageContext);
+
+  return (
+    <div className="flex flex-col w-full mt-10">
+      <div className="flex m-auto">
+        <HealthBox value={`${userData.weight}`} units="kg" name="Weight" />
+        <HealthBox value={`${userData.height}`} units="cm" name="Height" />
+      </div>
+      <div className="flex m-auto">
+        <HealthBox
+          value={`${userData.temperature}`}
+          units="°C"
+          name="Temperature"
+        />
+        <HealthBox
+          value={`${userData.heart_rate}`}
+          units="bpm"
+          name="Heart Rate"
+        />
+      </div>
+      <div className="flex m-auto">
+        <HealthBox
+          value={`${userData.blood_oxygen}`}
+          units="%"
+          name="Blood Oxygen"
+        />
+        <HealthBox
+          value={`${userData.blood_pressure}`}
+          units="mmHg"
+          name="Blood Pressure"
+        />
+      </div>
+    </div>
+  );
+};
+
+interface HealthBoxProps {
+  value: string;
+  units: string;
+  name: string;
+}
+
+const HealthBox: React.FC<HealthBoxProps> = ({ value, units, name }) => {
+  return (
+    <div className="w-32 h-32 border border-darker_secondary px-3 py-4 flex flex-col justify-between">
+      <div className="relative w-min">
+        <p className="text-5xl font-light">{value}</p>
+        <div className="absolute top-0" style={{ left: `calc(100% + 2px)` }}>
+          <p className="text-base font-base">{units}</p>
+        </div>
+      </div>
+      <p className="text-sm font-base">{name}</p>
     </div>
   );
 };
