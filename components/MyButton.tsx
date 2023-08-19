@@ -10,6 +10,11 @@ interface MyButtonProps {
   color?: string;
   outline?: boolean;
   textColor?: string;
+  fontWeight?: string;
+  pX?: number;
+  pY?: number;
+  notRounded?: boolean;
+  borderColor?: string;
 }
 
 const MyButton: React.FC<MyButtonProps> = ({
@@ -20,25 +25,31 @@ const MyButton: React.FC<MyButtonProps> = ({
   color,
   outline,
   textColor,
+  fontWeight = "font-light",
+  pX = 2,
+  pY = 1,
+  notRounded = false,
+  borderColor,
 }) => {
   return (
     <motion.button
       type={type}
       className={`fit-content ${
         noMargin ? "m-0" : "m-auto"
-      } outline-none shadow-none`}
+      } outline-none shadow-none `}
       onClick={onClick}
       whileTap={{ scale: 0.8 }}
     >
-      <div
-        className={`rounded-2xl ${
-          outline ? "" : color || "bg-darker_blue"
-        } py-1 px-5 fit-content m-auto`}
+      <p
+        className={`${borderColor} ${interFont} ${textColor ?? `text-white`} ${
+          fontWeight ?? "font-light"
+        } ${notRounded ? "" : "rounded-2xl"} ${
+          outline ? "" : color || "bg-darker_primary"
+        }  fit-content m-auto`}
+        style={{ padding: `${pY}rem ${pX}rem` }}
       >
-        <p className={`${interFont} ${textColor ?? `text-white`} font-light`}>
-          {label}
-        </p>
-      </div>
+        {label}
+      </p>
     </motion.button>
   );
 };

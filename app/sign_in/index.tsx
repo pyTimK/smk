@@ -4,7 +4,6 @@ import MyInput from "@/components/MyInput";
 import { interFont } from "@/styles/fonts";
 import SizedBox from "@/components/SizedBox";
 import BottomStats from "@/components/svg/BottomStats";
-import CircleBackground from "@/components/svg/CircleBackground";
 import useDeviceDimensions from "@/hooks/useDeviceDimensions";
 import {
   Dispatch,
@@ -22,6 +21,7 @@ import {
 import { auth } from "../firebase";
 import notify from "@/myfunctions/notify";
 import isValidEmail from "@/myfunctions/is_valid_email";
+import { Colors } from "@/styles/styles";
 
 enum SignInType {
   signIn,
@@ -42,9 +42,6 @@ const SignInPage: React.FC = () => {
         } left-0 right-0`}
       >
         <BottomStats />
-      </div>
-      <div className={`absolute top-0 right-0 w-4/5 z-0 max-w-sm`}>
-        <CircleBackground />
       </div>
     </div>
   );
@@ -170,10 +167,8 @@ const Content: React.FC<ContentProps> = ({ type, setType }) => {
       });
   };
   return (
-    <div
-      className={`flex flex-col items-ceter justify-center space-y-10 px-10`}
-    >
-      <SizedBox height={100} />
+    <div className={`flex flex-col items-ceter justify-center space-y-8 px-10`}>
+      <SizedBox height={20} />
       <div className="m-auto w-full">
         <FullLogo />
       </div>
@@ -182,12 +177,16 @@ const Content: React.FC<ContentProps> = ({ type, setType }) => {
         onSubmit={type === SignInType.signIn ? login : signup}
       >
         <MyInput
+          className="border rounded-lg w-full max-w-sm bg-light_primary"
+          borderColor={Colors.darker_primary}
           placeholder="Email"
           error={errorEmailInput}
           innerRef={emailRef}
           onChange={() => setErrorEmailInput(false)}
         />
         <MyInput
+          className="border rounded-lg w-full max-w-sm bg-light_primary"
+          borderColor={Colors.darker_primary}
           placeholder="Password"
           type="password"
           error={errorPasswordInput}
@@ -206,7 +205,9 @@ const Content: React.FC<ContentProps> = ({ type, setType }) => {
         FORGOT PASSWORD&#63;
       </p>
       <div className="flex flex-row items-center justify-center">
-        <p className={`${interFont} text-darker_blue fit-content m-0 text-sm`}>
+        <p
+          className={`${interFont} text-darker_primary fit-content m-0 text-sm`}
+        >
           {type == SignInType.signIn
             ? "DON'T HAVE AN ACOUNT?"
             : "ALREADY HAVE AN ACCOUNT?"}
