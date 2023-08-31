@@ -11,6 +11,16 @@ export type FirestoreDataType<T> = T & {
   updateData: (new_fields: Partial<T>) => Promise<void>;
 };
 
+export const convertTimestampsToDate = (input: any): any => {
+  const output = { ...input };
+  for (const key in output) {
+    if (output[key] instanceof Timestamp) {
+      output[key] = output[key].toDate(); // Converts Timestamp to Date
+    }
+  }
+  return output;
+};
+
 const useFirestoreData = <T>(
   dataDocRef: DocumentReference,
   constructEmpty: () => T
@@ -19,16 +29,6 @@ const useFirestoreData = <T>(
 
   const updateData = async (new_fields: Partial<T>) => {
     await updateDoc(dataDocRef, { ...new_fields });
-  };
-
-  const convertTimestampsToDate = (input: any): any => {
-    const output = { ...input };
-    for (const key in output) {
-      if (output[key] instanceof Timestamp) {
-        output[key] = output[key].toDate(); // Converts Timestamp to Date
-      }
-    }
-    return output;
   };
 
   useEffect(() => {

@@ -1,3 +1,5 @@
+import { FieldValue, serverTimestamp } from "firebase/firestore";
+
 export interface UserData {
   uid: string;
   email: string;
@@ -10,8 +12,11 @@ export interface UserData {
   temperature: number;
   heart_rate: number;
   blood_oxygen: number;
-  blood_pressure: number;
-  record_date: Date;
+  blood_pressure_diastolic: number;
+  blood_pressure_systolic: number;
+  record_date: FieldValue | Date;
+  is_measuring: boolean;
+  measuring_stage: FieldValue | number;
 }
 
 export const constructEmptyUserData = (): UserData => {
@@ -27,7 +32,10 @@ export const constructEmptyUserData = (): UserData => {
     temperature: 0,
     heart_rate: 0,
     blood_oxygen: 0,
-    blood_pressure: 0,
-    record_date: new Date(),
+    blood_pressure_diastolic: 0,
+    blood_pressure_systolic: 0,
+    record_date: serverTimestamp(),
+    is_measuring: false,
+    measuring_stage: 0,
   } as UserData;
 };

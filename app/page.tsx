@@ -9,6 +9,8 @@ import { ToastContainer } from "react-toastify";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { StorageNames } from "./constants";
 import LoadingPage from "./loading";
+import MeasuringPage from "./measuring";
+import DevicePage from "./device";
 
 export default function Home() {
   return (
@@ -28,9 +30,15 @@ const Wrapper = () => {
       setLoading(false);
     });
   }, []);
+  // get in local storage isDevice
+  const [isDevice, setIsDevice] = useLocalStorage(StorageNames.isDevice, false);
 
   if (loading) {
     return <LoadingPage />;
+  }
+
+  if (isDevice) {
+    return <DevicePage />;
   }
 
   if (user === null) {

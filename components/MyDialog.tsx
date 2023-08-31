@@ -64,7 +64,6 @@ const MyDialog: React.FC<MyDialogProps> = ({
                 type="number"
                 error={error}
                 onChange={() => setError(false)}
-                alignment="text-center"
               />
             </div>
           </div>

@@ -15,6 +15,7 @@ interface MyButtonProps {
   pY?: number;
   notRounded?: boolean;
   borderColor?: string;
+  roundedSize?: string;
 }
 
 const MyButton: React.FC<MyButtonProps> = ({
@@ -30,6 +31,7 @@ const MyButton: React.FC<MyButtonProps> = ({
   pY = 1,
   notRounded = false,
   borderColor,
+  roundedSize = "rounded-2xl",
 }) => {
   return (
     <motion.button
@@ -43,7 +45,7 @@ const MyButton: React.FC<MyButtonProps> = ({
       <p
         className={`${borderColor} ${interFont} ${textColor ?? `text-white`} ${
           fontWeight ?? "font-light"
-        } ${notRounded ? "" : "rounded-2xl"} ${
+        } ${notRounded ? "" : roundedSize} ${
           outline ? "" : color || "bg-darker_primary"
         }  fit-content m-auto`}
         style={{ padding: `${pY}rem ${pX}rem` }}

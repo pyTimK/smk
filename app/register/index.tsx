@@ -9,6 +9,7 @@ import { MainPageContext } from "../main";
 import notify from "@/myfunctions/notify";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { UserData } from "@/classes/UserData";
 
 const sexOptions = [
   { value: "male", label: "Male" },
@@ -86,21 +87,25 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
       });
       setIsEditingUserData(false);
     } else {
-      setDoc(doc(db, "users", user.uid), {
+      const newUserData: UserData = {
         uid: user.uid,
-        email: user.email,
+        email: user.email!,
         first_name: firstName,
         last_name: lastName,
         birth_date: startDate,
         sex: sexDropdownValue,
         blood_oxygen: 0,
-        blood_pressure: 0,
+        blood_pressure_diastolic: 0,
+        blood_pressure_systolic: 0,
         heart_rate: 0,
         height: 0,
         weight: 0,
         record_date: serverTimestamp(),
         temperature: 0,
-      });
+        is_measuring: false,
+        measuring_stage: 0,
+      };
+      setDoc(doc(db, "users", user.uid), newUserData);
     }
   }
 
