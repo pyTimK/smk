@@ -8,8 +8,8 @@ import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { Constants } from "../constants";
 import { DeviceData, constructEmptyDeviceData } from "@/classes/DeviceData";
 import React, { createContext, useEffect, useState } from "react";
-import MeasuringPage from "../measuring";
 import { UserData, constructEmptyUserData } from "@/classes/UserData";
+import MeasuringPageWrapper from "../measuring";
 
 export const DevicePageContext = createContext({
   deviceData: {} as FirestoreDataType<DeviceData>,
@@ -47,7 +47,7 @@ const DevicePage: React.FC = () => {
 
   return (
     <DevicePageContext.Provider value={{ deviceData, userData }}>
-      {deviceData.is_measuring ? <MeasuringPage isDevice /> : <QRPage />}
+      {deviceData.is_measuring ? <MeasuringPageWrapper isDevice /> : <QRPage />}
     </DevicePageContext.Provider>
   );
 };

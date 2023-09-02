@@ -2,7 +2,13 @@ import CheckIcon from "@/components/svg/CheckIcon";
 import DemoPoseWeighing from "@/components/svg/DemoPoseWeighing";
 import ProgressMeasuring from "@/components/svg/ProgressMeasuring";
 import { interFont } from "@/styles/fonts";
-import { Fragment, useContext, useEffect, useState } from "react";
+import {
+  Fragment,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { RingLoader } from "react-spinners";
 import { HealthGrid, MainPageContext } from "../main";
 import DemoPoseHeight from "@/components/svg/DemoPoseHeight";
@@ -27,6 +33,7 @@ import notify from "@/myfunctions/notify";
 import { DevicePageContext } from "../device";
 import { FirestoreDataType } from "@/hooks/useFirestoreData";
 import { Constants } from "../constants";
+import Modal from "react-modal";
 
 // create data; make it dynamic and up to x amount of numbers
 const diastolicData: PickerData[] = [];
@@ -57,16 +64,50 @@ const fetchFromFlask = async (url_path: string) => {
   }
 };
 
-interface MeasuringPageProps {
+const closeMeasuringStage = (userData: FirestoreDataType<UserData>) => {
+  setDoc(doc(db, "devices", Constants.qrCode), {
+    is_measuring: false,
+    user_id: "",
+  } as DeviceData);
+
+  userData.updateData({
+    measuring_stage: 0,
+    is_measuring: false,
+  });
+};
+
+export const MeasuringPageWrapperContext = createContext({
+  isDevice: false,
+  userData: {} as FirestoreDataType<UserData>,
+  deviceData: {} as FirestoreDataType<DeviceData>,
+});
+
+interface MeasuringPageWrapperProps {
   isDevice: boolean;
 }
 
-const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
+const MeasuringPageWrapper: React.FC<MeasuringPageWrapperProps> = ({
+  isDevice,
+}) => {
   const { userData: userDataFromUser } = useContext(MainPageContext);
   const { deviceData, userData: userDataFromDevice } =
     useContext(DevicePageContext);
 
-  console.log("WAWY");
+  const userData = isDevice ? userDataFromDevice : userDataFromUser;
+
+  return (
+    <MeasuringPageWrapperContext.Provider
+      value={{ isDevice, userData, deviceData }}
+    >
+      <MeasuringPage />
+    </MeasuringPageWrapperContext.Provider>
+  );
+};
+
+interface MeasuringPageProps {}
+
+const MeasuringPage: React.FC<MeasuringPageProps> = () => {
+  const { isDevice, userData } = useContext(MeasuringPageWrapperContext);
 
   // useEffect(() => {
   //   if (isDevice) {
@@ -81,27 +122,23 @@ const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
   //   }
   // }, []);
 
-  const userData = isDevice ? userDataFromDevice : userDataFromUser;
-
   useEffect(() => {
     console.log("WAWYeffect");
     if (isDevice) {
-      switch (userDataFromDevice.measuring_stage) {
+      switch (userData.measuring_stage) {
         case 0:
-          fetchFromFlask("start_weighing").then((data) => {
-            if (data === "START") {
-              userDataFromDevice.updateData({
-                measuring_stage: increment(1),
-                record_date: serverTimestamp(),
-              });
-            }
+          fetchFromFlask("weight_init").then((data) => {
+            userData.updateData({
+              measuring_stage: increment(1),
+              record_date: serverTimestamp(),
+            });
           });
           break;
 
         case 1:
           fetchFromFlask("weight").then((data) => {
             const weight = parseFloat(data);
-            userDataFromDevice.updateData({
+            userData.updateData({
               measuring_stage: increment(1),
               weight,
             });
@@ -110,26 +147,24 @@ const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
 
         case 2:
           setTimeout(() => {
-            userDataFromDevice.updateData({
+            userData.updateData({
               measuring_stage: increment(1),
             });
           }, 3000);
           break;
 
         case 3:
-          fetchFromFlask("start_height").then((data) => {
-            if (data === "START") {
-              userDataFromDevice.updateData({
-                measuring_stage: increment(1),
-              });
-            }
+          fetchFromFlask("height_init").then((data) => {
+            userData.updateData({
+              measuring_stage: increment(1),
+            });
           });
           break;
 
         case 4:
           fetchFromFlask("height").then((data) => {
             const height = parseFloat(data);
-            userDataFromDevice.updateData({
+            userData.updateData({
               measuring_stage: increment(1),
               height,
             });
@@ -138,30 +173,31 @@ const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
 
         case 5:
           setTimeout(() => {
-            userDataFromDevice.updateData({
+            userData.updateData({
               measuring_stage: increment(1),
             });
           }, 3000);
           break;
 
         case 6:
-          fetchFromFlask("start_vitals").then((data) => {
-            if (data === "START") {
-              userDataFromDevice.updateData({
-                measuring_stage: increment(1),
-              });
-            }
+          fetchFromFlask("vitals_init").then((data) => {
+            userData.updateData({
+              measuring_stage: increment(1),
+            });
           });
           break;
 
         case 7:
           fetchFromFlask("vitals").then((data) => {
             // parse the string "temperature,blood_oxygen,heart_rate"
-            const [temperature, heart_rate, blood_oxygen] = data
-              .split(",")
-              .map((d) => parseFloat(d));
+            const [temperature_str, heart_rate_str, blood_oxygen_str] =
+              data.split(" ");
 
-            userDataFromDevice.updateData({
+            const temperature = parseFloat(temperature_str);
+            const heart_rate = parseInt(heart_rate_str);
+            const blood_oxygen = parseInt(blood_oxygen_str);
+
+            userData.updateData({
               measuring_stage: increment(1),
               temperature,
               heart_rate,
@@ -172,7 +208,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
 
         case 8:
           setTimeout(() => {
-            userDataFromDevice.updateData({
+            userData.updateData({
               measuring_stage: increment(1),
             });
           }, 3000);
@@ -182,19 +218,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
           break;
       }
     }
-  }, [userDataFromDevice.measuring_stage]);
-
-  const handleOnReturn = () => {
-    setDoc(doc(db, "devices", Constants.qrCode), {
-      is_measuring: false,
-      user_id: "",
-    } as DeviceData);
-
-    userData.updateData({
-      measuring_stage: 0,
-      is_measuring: false,
-    });
-  };
+  }, [userData.measuring_stage]);
 
   switch (userData.measuring_stage) {
     case 0:
@@ -305,7 +329,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = ({ isDevice }) => {
               pX={1}
               pY={0.6}
               notRounded
-              onClick={handleOnReturn}
+              onClick={() => closeMeasuringStage(userData)}
             />
           </div>
         </div>
@@ -535,6 +559,17 @@ const BaseDesign: React.FC<BaseDesign> = ({
   children,
   level,
 }) => {
+  const { userData } = useContext(MeasuringPageWrapperContext);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  function openModal() {
+    setModalIsOpen(true);
+  }
+
+  function afterOpenModal() {}
+
+  function closeModal() {
+    setModalIsOpen(false);
+  }
   return (
     <div
       className={`${interFont} w-full min-h-screen bg-darker_primary text-white flex flex-col pt-16  items-center`}
@@ -557,6 +592,46 @@ const BaseDesign: React.FC<BaseDesign> = ({
       <div className="absolute bottom-10">
         <ProgressMeasuring level={level} />
       </div>
+      <div className="absolute top-4 left-4 text-2xl" onClick={openModal}>
+        ←
+      </div>
+      <Modal
+        isOpen={modalIsOpen}
+        className="absolute bg-darker_primary text-white rounded-xl py-5 px-5 inset-0 w-fit h-fit top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        onAfterOpen={afterOpenModal}
+        onRequestClose={closeModal}
+        // style={customStyles}
+        contentLabel="Example Modal"
+      >
+        <p className="whitespace-nowrap text-2xl font-light mb-5">
+          Stop Measuring?
+        </p>
+        <div className="flex justify-end items-center space-x-8">
+          <div className="mr-0">
+            <MyButton
+              label="No"
+              color="bg-transparent"
+              textColor="text-white"
+              pX={0}
+              pY={0}
+              notRounded
+              onClick={closeModal}
+            />
+          </div>
+
+          <MyButton
+            label="Yes"
+            color="bg-white"
+            textColor="text-darker_primary"
+            pX={0.6}
+            pY={0.4}
+            onClick={() => {
+              closeModal();
+              closeMeasuringStage(userData);
+            }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -583,4 +658,4 @@ const BreakByLines = ({
     </p>
   );
 };
-export default MeasuringPage;
+export default MeasuringPageWrapper;

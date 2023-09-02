@@ -14,7 +14,7 @@ import { SimpleDialogContainer, simpleAlert } from "react-simple-dialogs";
 import Modal from "react-modal";
 import { Constants } from "../constants";
 import { DeviceData } from "@/classes/DeviceData";
-import MeasuringPage from "../measuring";
+import MeasuringPageWrapper from "../measuring";
 
 export const MainPageContext = createContext({
   user: {} as User,
@@ -27,7 +27,7 @@ interface MainPageInterface {
 }
 const MainPage: React.FC<MainPageInterface> = ({ user }) => {
   const [isEditingUserData, setIsEditingUserData] = useState(false);
-  const [modalIsOpen, setIsOpen] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const userData = useFirestoreData(
     doc(db, "users", user.uid),
     constructEmptyUserData
@@ -51,7 +51,7 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
       <MainPageContext.Provider
         value={{ user, userData, setIsEditingUserData }}
       >
-        <MeasuringPage isDevice={false} />
+        <MeasuringPageWrapper isDevice={false} />
       </MainPageContext.Provider>
     );
   }
@@ -62,13 +62,13 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
   );
 
   function openModal() {
-    setIsOpen(true);
+    setModalIsOpen(true);
   }
 
   function afterOpenModal() {}
 
   function closeModal() {
-    setIsOpen(false);
+    setModalIsOpen(false);
   }
 
   console.log(userData);
@@ -107,7 +107,7 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
           // style={customStyles}
           contentLabel="Example Modal"
         >
-          <p className="whitespace-nowrap text-2xl font-light">
+          <p className="whitespace-nowrap text-2xl font-light mb-5">
             Scan Device QR
           </p>
           <BarcodeScanner closeModal={closeModal} />
@@ -147,10 +147,6 @@ const BarcodeScanner: React.FC<BarCodeScannerProps> = ({ closeModal }) => {
   return (
     <>
       <video ref={ref} />
-      <p>
-        <span>Last result:</span>
-        <span>{result}</span>
-      </p>
     </>
   );
 };
@@ -187,6 +183,7 @@ export const HealthGrid: React.FC<HealthGridProps> = () => {
         <HealthBox
           value={`${userData.blood_pressure_diastolic}/${userData.blood_pressure_systolic}`}
           units="mmHg"
+          small
           name="Blood Pressure"
         />
       </div>
@@ -198,15 +195,29 @@ interface HealthBoxProps {
   value: string;
   units: string;
   name: string;
+  small?: boolean;
 }
 
-const HealthBox: React.FC<HealthBoxProps> = ({ value, units, name }) => {
+const HealthBox: React.FC<HealthBoxProps> = ({
+  value,
+  units,
+  name,
+  small = false,
+}) => {
   return (
     <div className="w-32 h-32 border border-darker_secondary px-3 py-4 flex flex-col justify-between">
       <div className="relative w-min">
-        <p className="text-5xl font-light">{value}</p>
+        <p
+          className={`${
+            small ? "mt-3 text-2xl font-bold" : "text-5xl"
+          } font-light`}
+        >
+          {value}
+        </p>
         <div className="absolute top-0" style={{ left: `calc(100% + 2px)` }}>
-          <p className="text-base font-base">{units}</p>
+          <p className={`${small ? "text-xs" : "text-base"} font-base`}>
+            {units}
+          </p>
         </div>
       </div>
       <p className="text-sm font-base">{name}</p>
