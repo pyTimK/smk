@@ -4,12 +4,13 @@ import useFirestoreData, {
 } from "@/hooks/useFirestoreData";
 import { interFont, jsoFont } from "@/styles/fonts";
 import { db } from "../firebase";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import { Constants } from "../constants";
 import { DeviceData, constructEmptyDeviceData } from "@/classes/DeviceData";
 import React, { createContext, useEffect, useState } from "react";
 import { UserData, constructEmptyUserData } from "@/classes/UserData";
 import MeasuringPageWrapper from "../measuring";
+import MyButton from "@/components/MyButton";
 
 export const DevicePageContext = createContext({
   deviceData: {} as FirestoreDataType<DeviceData>,
@@ -57,11 +58,26 @@ interface QRPageProps {}
 const QRPage: React.FC<QRPageProps> = () => {
   return (
     <div className="flex flex-col space-y-20 px-8 justify-center items-center h-screen text-white bg-darker_primary">
-      <p className={`${jsoFont} text-5xl text-center`}>Smart Medical Kiosk</p>
+      <p className={`${jsoFont} text-5xl text-center`}>
+        Smart Interactive <br />
+        Health Kiosk
+      </p>
+      {/* <p className={`${jsoFont} text-5xl text-center`}>Smart Medical Kiosk</p> */}
       <img src="/images/qr.png" alt="medical kiosk" width={300} />
       <p className={`${interFont} text-3xl text-center`}>
         Scan to start measuring
       </p>
+      <MyButton
+        label="Measure now"
+        color="bg-white"
+        textColor="text-darkest_primary"
+        onClick={() => {
+          setDoc(doc(db, "devices", Constants.qrCode), {
+            is_measuring: true,
+            user_id: "2jB6OQm9PGh6M17uAgCkU6C5RPh2",
+          } as DeviceData);
+        }}
+      />
     </div>
   );
 };

@@ -34,6 +34,8 @@ import { DevicePageContext } from "../device";
 import { FirestoreDataType } from "@/hooks/useFirestoreData";
 import { Constants } from "../constants";
 import Modal from "react-modal";
+import formatNumber from "@/myfunctions/formatNumber";
+import getAge from "@/myfunctions/getAge";
 
 // create data; make it dynamic and up to x amount of numbers
 const diastolicData: PickerData[] = [];
@@ -50,11 +52,13 @@ for (let i = systolicDataMin; i <= systolicDataMax; i++) {
   systolicData.push({ id: i.toString(), value: i.toString() });
 }
 
-const fetchFromFlask = async (url_path: string) => {
+const fetchFromFlask = async (url_path: string, queryParams = "") => {
   try {
-    const url = `http://127.0.0.1:5000/${url_path}`;
+    const url = `http://127.0.0.1:5000/${url_path}?${queryParams}`;
     const res = await fetch(url);
-    const data = (await res.json()) as string;
+    console.log("res");
+    console.log(res);
+    const data = await res.text();
     console.log(`FETCHED ${url_path}: ${data}`);
     return data;
   } catch (_e) {
@@ -108,7 +112,7 @@ interface MeasuringPageProps {}
 
 const MeasuringPage: React.FC<MeasuringPageProps> = () => {
   const { isDevice, userData } = useContext(MeasuringPageWrapperContext);
-
+  console.log(userData);
   // useEffect(() => {
   //   if (isDevice) {
   //     fetch("http://127.0.0.1:5000/temp")
@@ -129,7 +133,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 0:
           fetchFromFlask("weight_init").then((data) => {
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 1,
               record_date: serverTimestamp(),
             });
           });
@@ -139,7 +143,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
           fetchFromFlask("weight").then((data) => {
             const weight = parseFloat(data);
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 2,
               weight,
             });
           });
@@ -148,7 +152,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 2:
           setTimeout(() => {
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 3,
             });
           }, 3000);
           break;
@@ -156,7 +160,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 3:
           fetchFromFlask("height_init").then((data) => {
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 4,
             });
           });
           break;
@@ -165,7 +169,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
           fetchFromFlask("height").then((data) => {
             const height = parseFloat(data);
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 5,
               height,
             });
           });
@@ -174,7 +178,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 5:
           setTimeout(() => {
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 6,
             });
           }, 3000);
           break;
@@ -182,7 +186,7 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 6:
           fetchFromFlask("vitals_init").then((data) => {
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 7,
             });
           });
           break;
@@ -190,15 +194,23 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 7:
           fetchFromFlask("vitals").then((data) => {
             // parse the string "temperature,blood_oxygen,heart_rate"
+
             const [temperature_str, heart_rate_str, blood_oxygen_str] =
               data.split(" ");
+
+            console.log("--------------------------------------------data");
+            console.log(data);
+            console.log(data.split(" "));
+            console.log(temperature_str);
+            console.log(heart_rate_str);
+            console.log(blood_oxygen_str);
 
             const temperature = parseFloat(temperature_str);
             const heart_rate = parseInt(heart_rate_str);
             const blood_oxygen = parseInt(blood_oxygen_str);
 
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 8,
               temperature,
               heart_rate,
               blood_oxygen,
@@ -209,16 +221,50 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
         case 8:
           setTimeout(() => {
             userData.updateData({
-              measuring_stage: increment(1),
+              measuring_stage: 9,
             });
           }, 3000);
           break;
 
         case 9:
+          const queryParams = new URLSearchParams({
+            age: `${getAge(userData.birth_date)}`,
+            weight: `${userData.weight}`,
+            height: `${userData.height}`,
+            temp: `${userData.temperature}`,
+            heart_rate: `${userData.heart_rate}`,
+            spo2: `${userData.blood_oxygen}`,
+          }).toString();
+
+          fetchFromFlask("bp", queryParams).then((data) => {
+            // parse the string "temperature,blood_oxygen,heart_rate"
+
+            const [sbp_str, dbp_str] = data.split(" ");
+
+            const sbp = parseFloat(sbp_str);
+            const dbp = parseFloat(dbp_str);
+
+            userData.updateData({
+              measuring_stage: 10,
+              blood_pressure_systolic: sbp,
+              blood_pressure_diastolic: dbp,
+            });
+          });
           break;
+
+        default:
       }
     }
+
+    // if ((userData.measuring_stage as number) > 9) {
+    //   userData.updateData({
+    //     measuring_stage: 0,
+    //     is_measuring: false,
+    //   });
+    // }
   }, [userData.measuring_stage]);
+
+  console.log(userData.measuring_stage);
 
   switch (userData.measuring_stage) {
     case 0:
@@ -271,7 +317,8 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
       return (
         <VitalsDesign>
           <p className="text-2xl text-center">
-            Place your hand at the vitals pad
+            Place your hand at the vitals pad. It would measure your temperature
+            automatically. Waiting for hand..
           </p>
         </VitalsDesign>
       );
@@ -314,13 +361,20 @@ const MeasuringPage: React.FC<MeasuringPageProps> = () => {
       );
 
     case 9:
-      return <BPDesignImplement />;
+      // return <BPDesignImplement />;
+      return (
+        <BPDesign isMeasuring>
+          <p className="text-2xl text-center">
+            Calculating your blood pressure
+          </p>
+        </BPDesign>
+      );
 
     case 10:
       return (
         <div className="flex flex-col space-y-10 mt-10">
           <p className="text-2xl text-center">Complete</p>
-          <HealthGrid />
+          <HealthGrid userData={userData} />
           <div className="w-full flex mt-8">
             <MyButton
               label="RETURN"
@@ -358,7 +412,7 @@ const BPDesignImplement: React.FC = () => {
     updateDoc(doc(db, "users", deviceDoc.user_id), {
       blood_pressure_diastolic: diastolic,
       blood_pressure_systolic: systolic,
-      measuring_stage: increment(1),
+      measuring_stage: 10,
     } as Partial<UserData> & { measuring_stage: any });
   };
   return (
@@ -431,7 +485,9 @@ const DataWithUnit: React.FC<DataWithUnitProps> = ({
 }) => {
   return (
     <div className="relative w-min m-auto">
-      <p className={`${titleSize} font-light text-center`}>{data}</p>
+      <p className={`${titleSize} font-light text-center`}>
+        {formatNumber(data)}
+      </p>
       <div className="absolute top-0" style={{ left: `calc(100% + 2px)` }}>
         <p className="text-xl font-base">{unit}</p>
       </div>
@@ -592,7 +648,10 @@ const BaseDesign: React.FC<BaseDesign> = ({
       <div className="absolute bottom-10">
         <ProgressMeasuring level={level} />
       </div>
-      <div className="absolute top-4 left-4 text-2xl" onClick={openModal}>
+      <div
+        className="absolute top-4 left-4 text-2xl cursor-pointer"
+        onClick={openModal}
+      >
         ←
       </div>
       <Modal

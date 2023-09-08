@@ -15,6 +15,7 @@ import Modal from "react-modal";
 import { Constants } from "../constants";
 import { DeviceData } from "@/classes/DeviceData";
 import MeasuringPageWrapper from "../measuring";
+import { toZeroIfNAN } from "@/myfunctions/formatNumber";
 
 export const MainPageContext = createContext({
   user: {} as User,
@@ -32,6 +33,9 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
     doc(db, "users", user.uid),
     constructEmptyUserData
   );
+
+  console.log("USER_DATAAAAAAAAAAAAAAAAAAAAAAA");
+  console.log(userData);
 
   if (!userData.uid || isEditingUserData) {
     return (
@@ -56,10 +60,9 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
     );
   }
 
-  const lastMeasuredDate = (userData.record_date as Date).toLocaleDateString(
-    "en-US",
-    lastMeasuredDateOption
-  );
+  const lastMeasuredDate = (
+    (userData.record_date as Date) ?? new Date()
+  ).toLocaleDateString("en-US", lastMeasuredDateOption);
 
   function openModal() {
     setModalIsOpen(true);
@@ -82,7 +85,7 @@ const MainPage: React.FC<MainPageInterface> = ({ user }) => {
         <SizedBox height={10} />
         <AvatarCard />
 
-        {userData.weight !== 0 && <HealthGrid />}
+        {userData.weight !== 0 && <HealthGrid userData={userData} />}
         <div className="flex flex-col space-y-3 justify-center items-center mt-10">
           <MyButton
             label="Measure"
@@ -151,37 +154,47 @@ const BarcodeScanner: React.FC<BarCodeScannerProps> = ({ closeModal }) => {
   );
 };
 
-interface HealthGridProps {}
+interface HealthGridProps {
+  userData: FirestoreDataType<UserData>;
+}
 
-export const HealthGrid: React.FC<HealthGridProps> = () => {
-  const { userData } = useContext(MainPageContext);
-
+export const HealthGrid: React.FC<HealthGridProps> = ({ userData }) => {
   return (
     <div className="flex flex-col w-full mt-10">
       <div className="flex m-auto">
-        <HealthBox value={`${userData.weight}`} units="kg" name="Weight" />
-        <HealthBox value={`${userData.height}`} units="cm" name="Height" />
+        <HealthBox
+          value={`${Math.floor(toZeroIfNAN(userData.weight))}`}
+          units="kg"
+          name="Weight"
+        />
+        <HealthBox
+          value={`${Math.floor(toZeroIfNAN(userData.height))}`}
+          units="cm"
+          name="Height"
+        />
       </div>
       <div className="flex m-auto">
         <HealthBox
-          value={`${userData.temperature}`}
+          value={`${Math.floor(toZeroIfNAN(userData.temperature))}`}
           units="°C"
           name="Temperature"
         />
         <HealthBox
-          value={`${userData.heart_rate}`}
+          value={`${Math.floor(toZeroIfNAN(userData.heart_rate))}`}
           units="bpm"
           name="Heart Rate"
         />
       </div>
       <div className="flex m-auto">
         <HealthBox
-          value={`${userData.blood_oxygen}`}
+          value={`${Math.floor(toZeroIfNAN(userData.blood_oxygen))}`}
           units="%"
           name="Blood Oxygen"
         />
         <HealthBox
-          value={`${userData.blood_pressure_diastolic}/${userData.blood_pressure_systolic}`}
+          value={`${Math.floor(
+            toZeroIfNAN(userData.blood_pressure_diastolic)
+          )}/${Math.floor(toZeroIfNAN(userData.blood_pressure_systolic))}`}
           units="mmHg"
           small
           name="Blood Pressure"
